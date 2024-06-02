@@ -2,6 +2,7 @@ import os
 import time
 import uuid
 from flask import Flask, flash, request, redirect, url_for, jsonify
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import ml
 
@@ -9,6 +10,7 @@ UPLOAD_FOLDER = './uploads'
 ALLOWED_EXTENSIONS = {'pdf'}
 
 app = Flask(__name__)
+CORS(app)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 data_store = {}
@@ -27,9 +29,10 @@ def allowed_file(filename):
 def upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
+        print(request)
         if 'file' not in request.files:
-            flash('No file part')
-            return redirect(request.url)
+            return('No file part')
+            # return redirect(request.url)
         file = request.files['file']
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
@@ -45,8 +48,11 @@ def upload_file():
             new_id = str(uuid.uuid4())
             data_store[new_id] = {"recruiter":recruiter}
             questions = recruiter.generate_questions()
-            # return jsonify({"id":new_id , "questions":questions})
-            return redirect(f"/submit_answers/{new_id}")
+            response = jsonify({"id":new_id , "questions":questions})
+            # TODO: Change CORS policy to be more restrictive
+            # response.headers.add('Access-Control-Allow-Origin', '*')
+            return response
+            # return redirect(f"/submit_answers/{new_id}")
 
     return '''
     <!doctype html>
@@ -62,20 +68,28 @@ def upload_file():
 def submit_answers(rec_id):
     if request.method=='POST':
         # req_json = request.get_json()
-        answers = request.form['answers']
+        answers = ""
+        for i in request.form:
+            answers += f"{i}. {request.form[i]}\n"
+        print(answers)
+        # answers = request.form['answers']
         # IF KEY DOES NOT EXIST
         # rec_id = req_json['id']
         recruiter = data_store[rec_id]['recruiter']
         score_analysis = recruiter.generate_score(answers) 
         os.remove(recruiter.file_path)
         del data_store[rec_id]
+        print(score_analysis)
         return score_analysis
     if request.method=='GET':
         questions = data_store[rec_id]['recruiter'].questions
+        question_text = ""
+        for i, question in enumerate(questions):
+           question_text += f"{i}. {question}\n"
         return f'''
         <!doctype html>
         <title>Submit Answers</title>
-        {questions}
+        {question_text}
         <form action="/submit_answers/{rec_id}" method=post enctype=multipart/form-data>
           <textarea rows="8" cols="100" name=answers></textarea>
           <input type=submit value=Upload>
