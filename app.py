@@ -1,4 +1,5 @@
 import os
+import time
 import uuid
 from flask import Flask, flash, request, redirect, url_for, jsonify
 from werkzeug.utils import secure_filename
@@ -38,9 +39,9 @@ def upload_file():
             # return redirect(request.url)
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], str(time.time())+filename)
             file.save(file_path)
-            recruiter = ml.AIRecruiter(file_path)
+            recruiter = ml.MockAIRecruiter(file_path)
             new_id = str(uuid.uuid4())
             data_store[new_id] = {"recruiter":recruiter}
             questions = recruiter.generate_questions()
@@ -66,6 +67,7 @@ def submit_answers(rec_id):
         # rec_id = req_json['id']
         recruiter = data_store[rec_id]['recruiter']
         score_analysis = recruiter.generate_score(answers) 
+        os.remove(recruiter.file_path)
         del data_store[rec_id]
         return score_analysis
     if request.method=='GET':
