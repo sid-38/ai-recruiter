@@ -44,7 +44,8 @@ def upload_file():
             new_id = str(uuid.uuid4())
             data_store[new_id] = {"recruiter":recruiter}
             questions = recruiter.generate_questions()
-            return jsonify({"id":new_id , "questions":questions})
+            # return jsonify({"id":new_id , "questions":questions})
+            return redirect(f"/submit_answers/{new_id}")
 
     return '''
     <!doctype html>
@@ -56,17 +57,28 @@ def upload_file():
     </form>
     '''
   
-@app.route('/submit_answers', methods=['POST'])
-def submit_answers():
+@app.route('/submit_answers/<rec_id>', methods=['GET','POST'])
+def submit_answers(rec_id):
     if request.method=='POST':
-        req_json = request.get_json()
+        # req_json = request.get_json()
+        answers = request.form['answers']
         # IF KEY DOES NOT EXIST
-        rec_id = req_json['id']
-        answers = req_json['answers']
+        # rec_id = req_json['id']
         recruiter = data_store[rec_id]['recruiter']
         score_analysis = recruiter.generate_score(answers) 
         del data_store[rec_id]
         return score_analysis
+    if request.method=='GET':
+        questions = data_store[rec_id]['recruiter'].questions
+        return f'''
+        <!doctype html>
+        <title>Submit Answers</title>
+        {questions}
+        <form action="/submit_answers/{rec_id}" method=post enctype=multipart/form-data>
+          <textarea rows="8" cols="100" name=answers></textarea>
+          <input type=submit value=Upload>
+        </form>
+        '''
 
 # driver function 
 if __name__ == '__main__': 

@@ -43,6 +43,17 @@ class AIRecruiter:
         self.score_analysis = response.choices[0].message.content
         return(self.score_analysis)
 
+class MockAIRecruiter:
+    def __init__(self, file_path):
+        self.file_path = file_path
+    
+    def generate_questions(self):
+        self.questions = "1.Question 1\n2.Question 2"
+        return(self.questions)
+    
+    def generate_score(self,answers):
+        return("Here's your score")
+
 
 
 #file_path = "./Sidharth_Anil_resume.pdf"
