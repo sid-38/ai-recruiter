@@ -48,7 +48,7 @@ def upload_file():
             file_path = os.path.join(CONFIG['UPLOAD_FOLDER'], str(time.time())+filename)
             file.save(file_path)
 
-            recruiter = ml.MockAIRecruiter(file_path, role)
+            recruiter = ml.AIRecruiter(file_path, role)
             # This ID is used by the backend to "remember" when the user submits the answer
             new_id = str(uuid.uuid4())
             data_store[new_id] = {"recruiter":recruiter}
