@@ -1,5 +1,5 @@
 generate_question_html = (i, question) => {
-	let html_text = `<label for="q-${i}"> ${i}. ${question} </label> <textarea rows=5 cols=100 name="q-${i}"></textarea>`
+	let html_text = `<label for="q-${i}"> ${i}. ${question} </label><br> <textarea rows=5 cols=100 name="q-${i}"></textarea><br>`
 	return(html_text);
 }
 
