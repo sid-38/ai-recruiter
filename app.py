@@ -5,106 +5,77 @@ from flask import Flask, flash, request, redirect, url_for, jsonify
 from flask_cors import CORS
 from werkzeug.utils import secure_filename
 import ml
+import json
 
-UPLOAD_FOLDER = './uploads'
+with open("./config.json", 'r') as f:
+    CONFIG = json.load(f)
 
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
+# UPLOAD_FOLDER = './uploads'
+# UPLOAD_FOLDER = config['UPLOAD_FOLDER']
+
+if not os.path.exists(CONFIG["UPLOAD_FOLDER"]):
+    os.makedirs(CONFIG["UPLOAD_FOLDER"])
 
 ALLOWED_EXTENSIONS = {'pdf'}
 
 app = Flask(__name__)
+# Configure CORS to be more restrictive
 CORS(app)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
+# Will contain the state to map answers to the questions
 data_store = {}
   
-@app.route('/', methods = ['GET', 'POST']) 
-def home(): 
-    if(request.method == 'GET'): 
-        data = "hello world"
-        return jsonify({'data': data}) 
-
 def allowed_file(filename):
     return '.' in filename and \
        filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['POST'])
 def upload_file():
     if request.method == 'POST':
         # check if the post request has the file part
-        print(request)
         if 'file' not in request.files:
-            return('No file part')
-            # return redirect(request.url)
-        file = request.files['file']
+            return('No file part', 400)
 
+        file = request.files['file']
         role = request.form['role']
-        print(request.form)
-        print(role)
-        # If the user does not select a file, the browser submits an
-        # empty file without a filename.
+
         if file.filename == '':
             return('No selected file')
-            # flash('No selected file')
-            # return redirect(request.url)
+
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], str(time.time())+filename)
+            file_path = os.path.join(CONFIG['UPLOAD_FOLDER'], str(time.time())+filename)
             file.save(file_path)
-            recruiter = ml.AIRecruiter(file_path, role)
+
+            recruiter = ml.MockAIRecruiter(file_path, role)
+            # This ID is used by the backend to "remember" when the user submits the answer
             new_id = str(uuid.uuid4())
             data_store[new_id] = {"recruiter":recruiter}
             questions = recruiter.generate_questions()
             response = jsonify({"id":new_id , "questions":questions})
-            # TODO: Change CORS policy to be more restrictive
-            # response.headers.add('Access-Control-Allow-Origin', '*')
             return response
-            # return redirect(f"/submit_answers/{new_id}")
 
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form method=post enctype=multipart/form-data>
-      <input type=file name=file>
-      <input type=submit value=Upload>
-    </form>
-    '''
+    return "Method not supported", 405
   
-@app.route('/submit_answers/<rec_id>', methods=['GET','POST'])
+@app.route('/submit_answers/<rec_id>', methods=['POST'])
 def submit_answers(rec_id):
     if request.method=='POST':
-        # req_json = request.get_json()
+
         answers = ""
         for i in request.form:
             answers += f"{i}. {request.form[i]}\n"
-        print(answers)
-        # answers = request.form['answers']
-        # IF KEY DOES NOT EXIST
-        # rec_id = req_json['id']
-        recruiter = data_store[rec_id]['recruiter']
+
+        try:
+            recruiter = data_store[rec_id]['recruiter']
+        except:
+            return "Key does not exist", 400
+
         score_analysis = recruiter.generate_score(answers) 
         os.remove(recruiter.file_path)
         del data_store[rec_id]
-        print(score_analysis)
         return score_analysis
-    if request.method=='GET':
-        questions = data_store[rec_id]['recruiter'].questions
-        question_text = ""
-        for i, question in enumerate(questions):
-           question_text += f"{i}. {question}\n"
-        return f'''
-        <!doctype html>
-        <title>Submit Answers</title>
-        {question_text}
-        <form action="/submit_answers/{rec_id}" method=post enctype=multipart/form-data>
-          <textarea rows="8" cols="100" name=answers></textarea>
-          <input type=submit value=Upload>
-        </form>
-        '''
 
 # driver function 
 if __name__ == '__main__': 
-  
-    app.run(debug = True) 
+    app.run(host=CONFIG['BACKEND_HOST'], port=CONFIG['BACKEND_PORT'], debug = True) 
