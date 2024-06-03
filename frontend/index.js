@@ -1,5 +1,5 @@
 generate_question_html = (i, question) => {
-	let html_text = `<label for="q-${i}"> ${i}. ${question} </label><br> <textarea rows=5 cols=100 name="q-${i}"></textarea><br>`
+	let html_text = `<div class="form-group m-3"><label for="${i}"> ${i}. ${question} </label><br> <textarea class="form-control" rows=5 name="${i}" required></textarea></div>`
 	return(html_text);
 }
 
@@ -22,11 +22,10 @@ $(document).ready(function () {
 			for (let index in data['questions']){
 				console.log(data['questions'][index]);
 				// questions_html += "<div>" + data['questions'][index] + "</div>";
-				questions_html += generate_question_html(index, data['questions'][index])
+				questions_html += generate_question_html(parseInt(index)+1, data['questions'][index])
 			}
 			console.log(questions_html);
-			// let qa_form = `<form action="http://localhost:5000/submit_answers/${data['id']}" method="post"> ${questions_html} <input type="submit"> Submit Answer </input> </form>`
-			let qa_form_content = `${questions_html} <input type="submit"> Submit Answer </input>`
+			let qa_form_content = `${questions_html} <button class="btn btn-primary" type="submit"> Submit Answers </input>`
 			$("#questions").html(qa_form_content);
 		  },
 		  error: function(data){
@@ -55,7 +54,7 @@ $(document).ready(function () {
 		success: function(data){
 		    console.log("SUCCESS");
 		    console.log(data);
-		    $("#score-content").html(`Score:${data['score']} <br>Reason:${data['reason']}`)
+		    $("#score-content").html(`<h5>Score: ${data['score']}</h5><br><h5>Reason: ${data['reason']}</h5>`)
 		},
 		error: function(data){
 		    console.log("ERROR");
