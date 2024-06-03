@@ -4,6 +4,7 @@ import pymupdf
 import sys
 import json
 from openai import OpenAI
+import prompts
 
 with open("./config.json", 'r') as f:
     CONFIG = json.load(f)
@@ -16,7 +17,6 @@ if "OPENAI_API_KEY" not in os.environ:
 client = OpenAI()
 
 class AIRecruiter:
-    num_questions = 2
     def __init__(self, file_path, role):
         self.file_path = file_path
         self.role = role
@@ -31,7 +31,7 @@ class AIRecruiter:
 
     def generate_questions(self):
         self.prompt = f'"""{self.text}"""'
-        system_prompt = f"You are a strict HR recruiter for a Software Company. Use the text between the triple quotes as the parsed text from the resume of a candidate. Using the resume provide {AIRecruiter.num_questions} questions to judge the candidate for the role of {self.role}. Make sure the questions are not numbered but newline seperated"
+        system_prompt = prompts.get_resume_prompt(CONFIG['NUM_QUESTIONS'], self.role)
 
         # Storing the messages in the object, to recall later during the score generation phase
         self.messages=[
@@ -50,10 +50,11 @@ class AIRecruiter:
         return(self.questions)
 
     def generate_score(self, answers):
+        system_prompt = prompts.get_score_prompt()
         self.messages=[
             *(self.messages),
             {"role": "assistant", "content":self.questions_text},
-            {"role": "system", "content": "The following content between triple quotes will be the answer that the user provide for the previous questions. Based on the answers that the candidate provided, give a score out of 10 for the candidate and explain the reasoning. Make sure to give a score of zero if no relevant information is provided. The first line of the response should just contain the numeric score and the second line should have the reasoning. Do not use any labels."},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": f'"""{answers}"""'},
         ]
         response = client.chat.completions.create(
