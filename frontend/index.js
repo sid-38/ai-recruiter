@@ -7,6 +7,10 @@ $(document).ready(function () {
   // Submitting the resume using AJAX and displaying the questions
   $("#file-upload").submit(function (event) {
    var formURL = $(this).attr("action");
+   $("#resume-upload-div").css("display", "none");
+   $("#score-div").css("display", "none");
+   $("#questions-div").css("display", "block");
+   $("#spinner").css("display", "block");
    console.log("Submitting");
 	  $.ajax({
 		  type: "POST",
@@ -27,21 +31,22 @@ $(document).ready(function () {
 			console.log(questions_html);
 			let qa_form_content = `${questions_html} <button class="btn btn-primary" type="submit"> Submit Answers </input>`
 			$("#questions").html(qa_form_content);
+			$("#spinner").css("display", "none");
 		  },
 		  error: function(data){
 		  	console.log("ERROR");
 		  	console.log(data);
 		  }
 	  });
-   $("#resume-upload-div").css("display", "none");
-   $("#score-div").css("display", "none");
-   $("#questions-div").css("display", "block");
    event.preventDefault();
   });
 
   // Submitting the answers using AJAX and displaying the score
   $("#questions").submit(function (event){
-	
+        $("#resume-upload-div").css("display", "none");
+        $("#questions-div").css("display", "none");
+        $("#score-div").css("display", "block");
+	$("#spinner").css("display", "block");
 	var formURL = $(this).attr("action");
 	console.log("Submitting answers");
 	console.log(this);
@@ -55,15 +60,13 @@ $(document).ready(function () {
 		    console.log("SUCCESS");
 		    console.log(data);
 		    $("#score-content").html(`<h5>Score: ${data['score']}</h5><br><h5>Reason: ${data['reason']}</h5>`)
+		$("#spinner").css("display", "none");
 		},
 		error: function(data){
 		    console.log("ERROR");
 		    console.log(data);
 		},
 	});
-        $("#resume-upload-div").css("display", "none");
-        $("#questions-div").css("display", "none");
-        $("#score-div").css("display", "block");
 	event.preventDefault();
   });
 });
