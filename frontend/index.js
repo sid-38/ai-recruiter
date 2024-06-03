@@ -6,7 +6,6 @@ generate_question_html = (i, question) => {
 $(document).ready(function () {
   // Submitting the resume using AJAX and displaying the questions
   $("#file-upload").submit(function (event) {
-
    var formURL = $(this).attr("action");
    console.log("Submitting");
 	  $.ajax({
@@ -35,11 +34,15 @@ $(document).ready(function () {
 		  	console.log(data);
 		  }
 	  });
+   $("#resume-upload-div").css("display", "none");
+   $("#score-div").css("display", "none");
+   $("#questions-div").css("display", "block");
    event.preventDefault();
   });
 
   // Submitting the answers using AJAX and displaying the score
   $("#questions").submit(function (event){
+	
 	var formURL = $(this).attr("action");
 	console.log("Submitting answers");
 	console.log(this);
@@ -52,12 +55,16 @@ $(document).ready(function () {
 		success: function(data){
 		    console.log("SUCCESS");
 		    console.log(data);
+		    $("#score-content").html(`Score:${data['score']} <br>Reason:${data['reason']}`)
 		},
 		error: function(data){
 		    console.log("ERROR");
 		    console.log(data);
 		},
 	});
+        $("#resume-upload-div").css("display", "none");
+        $("#questions-div").css("display", "none");
+        $("#score-div").css("display", "block");
 	event.preventDefault();
   });
 });
