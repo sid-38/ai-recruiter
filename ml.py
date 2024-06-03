@@ -1,4 +1,5 @@
 import os
+import time
 import pymupdf
 from openai import OpenAI
 
@@ -6,8 +7,9 @@ client = OpenAI()
 
 class AIRecruiter:
     num_questions = 2
-    def __init__(self, file_path):
+    def __init__(self, file_path, role):
         self.file_path = file_path
+        self.role = role
         # CHECK IF PDF AND CHECK IF PARSABLE
         doc = pymupdf.open(self.file_path)
         text = ""
@@ -19,9 +21,11 @@ class AIRecruiter:
         #Generating the questions
         # self.prompt = f'"""{self.text}"""\nGive 2 questions to judge the candidate\'s capability that can be used to score him later on'
         self.prompt = f'"""{self.text}"""'
+        system_prompt = f"You are a strict HR recruiter for a Software Company. Use the text between the triple quotes as the parsed text from the resume of a candidate. Using the resume provide {AIRecruiter.num_questions} questions to judge the candidate for the role of {self.role}. Make sure the questions are not numbered but newline seperated"
+        print(system_prompt)
         self.messages=[
-                {"role": "system", "content": f"You are an HR employee for a Software Company. Use the text between the triple quotes as the parsed text from the resume of a candidate. Using the resume provide {AIRecruiter.num_questions} questions to judge the candidate for the role of Software Developer. Make sure the questions are not numbered but newline seperated"},
-        {"role": "user", "content": self.prompt},
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": self.prompt},
         ]
 
         response = client.chat.completions.create(
@@ -38,7 +42,7 @@ class AIRecruiter:
         self.messages=[
             *(self.messages),
             {"role": "assistant", "content":self.questions_text},
-            {"role": "system", "content": "The content between the triple quotes will be the answer that the user provided for the previous questions. Using the resume, the questions asked and the answers that the candidate provided, give a score out of 10 for the candidate and explain the reasoning. The first line of the response should just contain the score and the second line should have the reasoning"},
+            {"role": "system", "content": "The following content between triple quotes will be the answer that the user provide for the previous questions. Based on the answers that the candidate provided, give a score out of 10 for the candidate and explain the reasoning. Make sure to give a score of zero if no relevant information is provided. The first line of the response should just contain the numeric score and the second line should have the reasoning. Do not use any labels."},
             {"role": "user", "content": f'"""{answers}"""'},
         ]
         response = client.chat.completions.create(
@@ -50,16 +54,20 @@ class AIRecruiter:
         return(self.score_analysis)
 
 class MockAIRecruiter:
-    def __init__(self, file_path):
+    def __init__(self, file_path, role):
         self.file_path = file_path
+        self.role = role
+        print("FROM ML", self.role)
     
     def generate_questions(self):
+        time.sleep(5)
         self.questions = [line for line in "Question 1\n\n\nQuestion 2".splitlines() if line.strip()]
         return(self.questions)
     
     def generate_score(self,answers):
+        time.sleep(5)
         score_analysis="7\nThe reason for your score is blah blah".splitlines()
-        return({'score':score_analysis[0], 'reason':score_analysis[1]})
+        return({'score':score_analysis[0], 'reason':score_analysis[1]},400)
 
 
 

@@ -14,10 +14,20 @@
 
 <div class="container mt-5">
   <div id="resume-upload-div">
-    <h3 class="mb-3">Upload Resume</h3>
+    <h3 class="mb-3">Profile</h3>
     <form action="http://localhost:5000/upload" method="post" enctype="multipart/form-data" id="file-upload">
       <div class="form-group">
 	<!-- <label for="file" class="form-label">Choose File:</label> -->
+	<label for="role" class="form-label"> Select your role: </label>
+	<select name="role" class="custom-select custom-select-lg mb-3">
+	  <option selected>Full Stack Developer</option>
+	  <option>Frontend Developer</option>
+	  <option>Backend Developer</option>
+	  <option>Machine Learning Engineer</option>
+	  <option>Project Manager</option>
+	</select>
+	<br>
+	<label for="file" class="form-label"> Upload your resume: </label>
 	<input type="file" class="form-control" id="file" name="file" required>
       </div>
       <button type="submit" class="btn btn-primary mt-3">Upload</button>

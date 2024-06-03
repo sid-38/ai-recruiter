@@ -7,6 +7,10 @@ from werkzeug.utils import secure_filename
 import ml
 
 UPLOAD_FOLDER = './uploads'
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
 ALLOWED_EXTENSIONS = {'pdf'}
 
 app = Flask(__name__)
@@ -34,6 +38,10 @@ def upload_file():
             return('No file part')
             # return redirect(request.url)
         file = request.files['file']
+
+        role = request.form['role']
+        print(request.form)
+        print(role)
         # If the user does not select a file, the browser submits an
         # empty file without a filename.
         if file.filename == '':
@@ -44,7 +52,7 @@ def upload_file():
             filename = secure_filename(file.filename)
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], str(time.time())+filename)
             file.save(file_path)
-            recruiter = ml.MockAIRecruiter(file_path)
+            recruiter = ml.AIRecruiter(file_path, role)
             new_id = str(uuid.uuid4())
             data_store[new_id] = {"recruiter":recruiter}
             questions = recruiter.generate_questions()
