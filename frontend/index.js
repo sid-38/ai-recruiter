@@ -3,6 +3,13 @@ generate_question_html = (i, question) => {
 	return(html_text);
 }
 
+raise_error = (message) => {
+	alert_html = `<div class="alert alert-danger" role="alert">
+	${message}	
+	</div>`;
+	$("#alert-placeholder").html(alert_html);
+}
+
 $(document).ready(function () {
   // Submitting the resume using AJAX and displaying the questions
   $("#file-upload").submit(function (event) {
@@ -36,6 +43,9 @@ $(document).ready(function () {
 		  error: function(data){
 		  	console.log("ERROR");
 		  	console.log(data);
+			$("#spinner").css("display", "none");
+			raise_error("Could not submit resume to server. Try again later");
+
 		  }
 	  });
    event.preventDefault();
@@ -65,6 +75,8 @@ $(document).ready(function () {
 		error: function(data){
 		    console.log("ERROR");
 		    console.log(data);
+		    $("#spinner").css("display", "none");
+		    raise_error("Could not submit answers to the server. Try again later");
 		},
 	});
 	event.preventDefault();
